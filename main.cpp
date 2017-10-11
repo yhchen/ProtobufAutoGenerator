@@ -28,10 +28,13 @@ struct ProtobufCommand
 	string baseOutDir = "./";
 	string fullHeader;
 	string fullBody;
+	string changeExt;
+	string outType = "cpp_out";
 
 	int bodySplitSize = 0; // 0代表无限
 	bool enableFullHeader = false;
 	bool enableFullBody = false;
+	bool enableChangeExt = false;
 } gProtoBufCommand;
 
 static const string ProtoFileExt = ".proto";
@@ -41,6 +44,7 @@ extern unordered_map<string, CmdHandler> gCmdHandler;
 
 extern bool parseArguments(int argc, char **argv);
 extern bool runCommand();
+extern string changeFileExt(const string& resfile, const char* ext);
 
 int main(int argc, char **argv)
 {
@@ -175,6 +179,16 @@ bool parseArguments(int argc, char **argv)
 	return true;
 }
 
+string changeFileExt(const string& resfile, const char* ext)
+{
+	auto dotPos = resfile.find_last_of('.');
+	if (dotPos == string::npos)
+	{
+		return dotPos + "." + string(ext);
+	}
+	return resfile.substr(0, dotPos + 1) + ext;
+}
+
 bool runCommand()
 {
 	dfsFolder(gProtoBufCommand.baseReadDir, ProtoFileExt, [](const string& file)->void{
@@ -190,7 +204,23 @@ bool runCommand()
 	for (int i = 0; i < (int)gPackages.size(); ++i)
 	{
 		const auto& package = gPackages[i];
-		string cmd = "CALL " + gProtoBufCommand.protoPath + " --cpp_out=" + package.outdir + " --proto_path=" + package.basedir + " " + package.infilepath;
+		string outfile;
+		if (gProtoBufCommand.outType == "cpp_out")
+		{
+			outfile = package.outdir;
+		}
+		else
+		{
+			outfile = package.outdir + DirSpliter + package.infilepath.substr(package.basedir.length());
+			if (gProtoBufCommand.enableChangeExt)
+			{
+				outfile = changeFileExt(outfile, gProtoBufCommand.changeExt.c_str());
+			}
+		}
+		string cmd = "CALL " + gProtoBufCommand.protoPath + " --proto_path " + package.basedir + " " + " --" + gProtoBufCommand.outType + " " + outfile + " " + package.infilepath;
+// 		string cmd = "CALL " + gProtoBufCommand.protoPath + " --proto_path " + package.basedir + " " + " --descriptor_set_out " + outfile + " " + package.infilepath;
+// 		string cmd = "CALL " + gProtoBufCommand.protoPath + " --proto_path " + package.basedir + " " + " --cpp_out " + package.outdir + " " + package.infilepath;
+
 		auto cmdRet = system(cmd.c_str());
 		if (cmdRet != 0)
 		{
@@ -275,4 +305,6 @@ unordered_map<string, CmdHandler> gCmdHandler = {
 	{ "fullheader",				[](const string& cmd, const string& param) -> void { gProtoBufCommand.fullHeader = replace_separator(param); gProtoBufCommand.enableFullHeader = true; } },
 	{ "fullbody",				[](const string& cmd, const string& param) -> void { gProtoBufCommand.fullBody = replace_separator(param); gProtoBufCommand.enableFullBody = true; } },
 	{ "fullbodysplit",			[](const string& cmd, const string& param) -> void { gProtoBufCommand.bodySplitSize = atoi(param.c_str()); } },
+	{ "outext",					[](const string& cmd, const string& param) -> void { gProtoBufCommand.changeExt = param; gProtoBufCommand.enableChangeExt = true; } },
+	{ "outtype",				[](const string& cmd, const string& param) -> void { gProtoBufCommand.outType = param; } },
 };
