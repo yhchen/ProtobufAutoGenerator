@@ -255,7 +255,7 @@ bool runCommand()
 			for (int i = 0; i < (int)gPackages.size(); ++i)
 			{
 				const auto& package = gPackages[i];
-				location_out << "#include \"" << package.outfilerelativepath << ".h\"" << endl;
+				location_out << "#include \"" << package.outfilerelativepath << "pb.h\"" << endl;
 			}
 			cout << "generate full header files success - " << outfile << endl;
 		}
@@ -290,7 +290,7 @@ bool runCommand()
 			}
 
 			const auto& package = gPackages[i];
-			location_out << "#include \"" << package.outfilerelativepath << ".cc\"" << endl;
+			location_out << "#include \"" << package.outfilerelativepath << "pb.cc\"" << endl;
 			++linecount;
 		}
 	}
