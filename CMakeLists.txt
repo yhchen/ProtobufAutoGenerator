@@ -5,4 +5,4 @@ cmake_minimum_required (VERSION 2.8)
 project (ProtobufAutoGenerator)
 
 # build target
-add_executable(ProtobufAutoGenerator main.cc)
+add_executable(ProtobufAutoGenerator main.cpp)
