@@ -3,9 +3,16 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <string.h>
 #include <unordered_map>
 #include <functional>
-#include <io.h>
+#if defined(_MSC_VER)
+#	include <io.h>
+#else
+#	include <sys/stat.h>
+#	include <dirent.h>
+#	include <sys/stat.h>
+#endif // _MSC_VER
 
 using namespace std;
 
@@ -111,6 +118,7 @@ string replace_separator(const string& path)
 //深度优先递归遍历当前目录下文件夹和文件及子文件夹和文件
 void dfsFolder(const string& path, const string& fileExt, function<void(const string&)> callFunc)
 {
+#if defined(_MSC_VER)
 	_finddata_t file_info;
 	string current_path = path + DirSpliter + "*.*"; //也可以用/*来匹配所有
 	current_path = replace_separator(current_path);
@@ -142,6 +150,43 @@ void dfsFolder(const string& path, const string& fileExt, function<void(const st
 	} while (!_findnext(handle, &file_info));//返回0则遍历完
 											 //关闭文件句柄
 	_findclose(handle);
+#else
+   dirent *direntp;
+   DIR *dirp = opendir(path.c_str());
+	//返回值为NULL则查找失败
+   if (dirp == NULL) {
+		cerr << "cannot match the path" << endl;
+	   return;
+   }
+
+	while ((direntp = readdir(dirp)) != NULL)
+	{
+		if (strcmp(direntp->d_name, "..") == 0 || strcmp(direntp->d_name, ".") == 0)//.是当前目录，..是上层目录，必须排除掉这两种情况
+			continue;
+
+		string subpath = path + '/' + direntp->d_name;
+		struct stat s;
+		lstat(subpath.c_str(),&s);
+
+		//判断是否子目录
+		if(S_ISDIR(s.st_mode))
+		{
+			//递归遍历子目录
+			dfsFolder(subpath, fileExt, callFunc); //再windows下可以用\\转义分隔符，不推荐
+		}
+		else
+		{
+			string filename = direntp->d_name;
+			if (filename.length() < fileExt.length()) continue;
+			if (filename.substr(filename.length()-fileExt.length()) != fileExt) continue;
+			string filepath = path + "/" + filename;
+			callFunc(replace_separator(filepath));
+		}
+	}
+
+	//关闭文件句柄
+	closedir(dirp);
+#endif
 }
 
 bool parseArguments(int argc, char **argv)
