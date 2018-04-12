@@ -30,6 +30,7 @@ struct ProtobufCommand
 	string fullBody;
 	string changeExt;
 	string outType = "cpp_out";
+	string commomCompilerHeader;
 
 	int bodySplitSize = 0; // 0代表无限
 	bool enableFullHeader = false;
@@ -286,6 +287,10 @@ bool runCommand()
 					break;
 				}
 				cout << "generate full body file success - " << nextfile << endl;
+				if (gProtoBufCommand.commomCompilerHeader.length() > 0)
+				{
+					location_out << "#include \"" << gProtoBufCommand.commomCompilerHeader << "\"" << endl;
+				}
 				linecount = 0; ++fileindex;
 			}
 
@@ -307,4 +312,5 @@ unordered_map<string, CmdHandler> gCmdHandler = {
 	{ "fullbodysplit",			[](const string& cmd, const string& param) -> void { gProtoBufCommand.bodySplitSize = atoi(param.c_str()); } },
 	{ "outext",					[](const string& cmd, const string& param) -> void { gProtoBufCommand.changeExt = param; gProtoBufCommand.enableChangeExt = true; } },
 	{ "outtype",				[](const string& cmd, const string& param) -> void { gProtoBufCommand.outType = param; } },
+	{ "common_compiler_hearder",[](const string& cmd, const string& param) -> void { gProtoBufCommand.commomCompilerHeader = param; } },
 };
