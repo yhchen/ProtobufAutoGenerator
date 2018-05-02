@@ -156,15 +156,15 @@ void dfsFolder(const string& path, const string& fileExt, function<void(const st
 											 //关闭文件句柄
 	_findclose(handle);
 #else
-   dirent *direntp;
+   dirent *direntp = nullptr;
    DIR *dirp = opendir(path.c_str());
 	//返回值为NULL则查找失败
-   if (dirp == NULL) {
+   if (dirp == nullptr) {
 		cerr << "cannot match the path" << endl;
 	   return;
    }
 
-	while ((direntp = readdir(dirp)) != NULL)
+	while ((direntp = readdir(dirp)) != nullptr)
 	{
 		if (strcmp(direntp->d_name, "..") == 0 || strcmp(direntp->d_name, ".") == 0)//.是当前目录，..是上层目录，必须排除掉这两种情况
 			continue;
@@ -182,8 +182,10 @@ void dfsFolder(const string& path, const string& fileExt, function<void(const st
 		else
 		{
 			string filename = direntp->d_name;
-			if (filename.length() < fileExt.length()) continue;
-			if (filename.substr(filename.length()-fileExt.length()) != fileExt) continue;
+			if (filename.length() < fileExt.length())
+				continue;
+			if (filename.substr(filename.length()-fileExt.length()) != fileExt)
+				continue;
 			string filepath = path + "/" + filename;
 			callFunc(replace_separator(filepath));
 		}
