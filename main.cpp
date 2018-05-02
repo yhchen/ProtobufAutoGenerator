@@ -30,7 +30,11 @@ std::vector<ProtobufFilePackage> gPackages;
 
 struct ProtobufCommand
 {
+#if defined(WIN32)
 	string protoPath = "proto";
+#else
+	string protoPath = "./proto";
+#endif
 	string baseReadDir = "./";
 	string baseOutDir = "./";
 	string fullHeader;
@@ -136,8 +140,8 @@ void dfsFolder(const string& path, const string& fileExt, function<void(const st
 		//判断是否子目录
 		if (file_info.attrib == _A_SUBDIR)
 		{
-			//递归遍历子目录
 			if (strcmp(file_info.name, "..") != 0 && strcmp(file_info.name, ".") != 0)//.是当前目录，..是上层目录，必须排除掉这两种情况
+			//递归遍历子目录
 				dfsFolder(path + '/' + file_info.name, fileExt, callFunc); //再windows下可以用\\转义分隔符，不推荐
 		}
 		else
@@ -264,7 +268,11 @@ bool runCommand()
 				outfile = changeFileExt(outfile, gProtoBufCommand.changeExt.c_str());
 			}
 		}
-		string cmd = "CALL " + gProtoBufCommand.protoPath + " --proto_path " + package.basedir + " " + " --" + gProtoBufCommand.outType + " " + outfile + " " + package.infilepath;
+		string cmd = gProtoBufCommand.protoPath + " --proto_path " + package.basedir + " " + " --" + gProtoBufCommand.outType + " " + outfile + " " + package.infilepath;
+#if defined(WIN32)
+			cmd = "CALL " + cmd;
+#endif
+
 // 		string cmd = "CALL " + gProtoBufCommand.protoPath + " --proto_path " + package.basedir + " " + " --descriptor_set_out " + outfile + " " + package.infilepath;
 // 		string cmd = "CALL " + gProtoBufCommand.protoPath + " --proto_path " + package.basedir + " " + " --cpp_out " + package.outdir + " " + package.infilepath;
 
